@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>抖音数据复盘：把创作者后台指标变成单文件复盘报告</title>
+<style>
+/* 单文件、零外网：由 03-给AI看的…/生成说明书.py 生成；改页面只改本文件再重跑 */
+:root{
+  --bg:#f3f5f7; --paper:#fff; --ink:#18212b; --muted:#5c6976; --line:#dde3e9;
+  --accent:#1f6feb; --accent-soft:#e3edfd; --mark:#e8700a; --mark-soft:#fdf0e3;
+  --ok:#1a7f4b; --ok-soft:#e6f6ed; --warn:#b4560b;
+  --f-body:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --paper:#171e26; --ink:#e7edf3; --muted:#9aa7b4; --line:#2a333d;
+  --accent:#6ea8ff; --accent-soft:#1a2a42; --mark:#f0a35c; --mark-soft:#33240f;
+  --ok:#4cc38a; --ok-soft:#143022; --warn:#f0a35c; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{max-width:860px;margin:0 auto;padding:32px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:22px}
+h1{font-size:28px;font-weight:900;line-height:1.3;margin:0;text-wrap:balance}
+h2{font-size:19px;margin:0 0 10px}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.badge.data{background:var(--mark-soft);color:var(--mark)}
+.lede{color:var(--muted);margin:8px 0 0}
+code{font-family:var(--f-mono);font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere;word-break:break-word}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.grid .item{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.grid .item b{display:block;margin-bottom:4px}
+.grid .item span{color:var(--muted);font-size:14px}
+.tbl-wrap{width:100%;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{border-bottom:1px solid var(--line);padding:9px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+td:first-child,th:first-child{min-width:100px;word-break:normal;overflow-wrap:break-word}
+.prep-tbl td:first-child{white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.steps{display:flex;flex-direction:column;gap:16px}
+.step h3{font-size:17px;line-height:1.5;margin:0 0 8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:14px;flex:0 0 auto}
+.step p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.who{white-space:nowrap;display:inline-block;font-size:12px;border-radius:4px;padding:1px 7px;font-weight:600}
+.who.me{background:var(--mark-soft);color:var(--mark)}
+.who.ai{background:var(--accent-soft);color:var(--accent)}
+.say-box{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 12px;border-radius:0 8px 8px 0}
+.say-text{font-weight:700;font-size:15px;flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.copy-btn{border:1px solid var(--accent);background:var(--paper);color:var(--accent);font:inherit;font-size:13px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;flex:0 0 auto}
+.copy-btn.copied{background:var(--ok);border-color:var(--ok);color:#fff}
+.stop{margin-top:10px;background:var(--mark-soft);color:var(--ink);padding:10px 12px;border-radius:8px;font-size:14px;border-left:3px solid var(--mark)}
+.notice{margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13.5px;color:var(--muted)}
+.diagram{margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+.diagram-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--mark);background:var(--mark-soft);padding:1px 7px;border-radius:4px;margin-bottom:8px}
+.diagram svg{display:block;width:100%;height:auto}
+.diagram figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+.m{color:var(--mark);font-weight:700}
+.okline{color:var(--ok);font-weight:600}
+ul{margin:6px 0 0;padding-left:20px}
+li{margin:4px 0}
+@media (max-width:560px){
+  h1{font-size:23px}
+  .card{padding:14px}
+  .wrap{gap:16px;padding-top:20px}
+}
+.foot{color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<header>
+  <div class="badge-row">
+    <span class="badge data">自有创作者后台 · 留存判据</span>
+    <span class="badge">单文件 HTML 报告 · 全本地出图</span>
+  </div>
+  <h1>抖音数据复盘：把后台深层指标拉下来、算清楚</h1>
+  <p class="lede">抖音官方开放平台不对个人号开放「2 秒跳出率、5 秒完播率、平均播放占比」这些关键留存指标；网页后台又只能一条条瞪着看。把这个压缩包拖给你的 AI，它就给你搭好本地流水线，一句话出单文件复盘报告，数据绝不出你电脑。</p>
+</header>
+
+<section class="card">
+  <h2>重点不在画图，在这 3 条判据口径</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>口径</th><th>常见误区</th><th>这套流水线怎么判</th></tr>
+      <tr><td><b>长视频完播率</b></td><td>死盯「完播率 ≥ 30%」</td><td>30% 是短视频参考线；3 分钟以上片子完播率 3%–7% 正常，重点看<b>平均观看秒</b>和<b>平均播放占比</b></td></tr>
+      <tr><td><b>北极星指标</b></td><td>只盯着完播率改片</td><td>知识/工具类内容，<b>收藏率</b>比完播率更能反映价值（有人存才说明给到了干货）</td></tr>
+      <tr><td><b>前 5 秒病灶</b></td><td>把两个指标混叫成「5 秒跳出」</td><td>后台其实是<b>2 秒跳出率</b>（开头抓不抓人）和<b>5 秒完播率</b>（第 2–5 秒拖不拖）两个独立指标，改法完全相反</td></tr>
+    </table>
+  </div>
+  <div class="notice">另外不用「行业均值」瞎比较：抖音没有官方阈值，样本低于 30 条时均值极易被爆款拉偏，报告直接拿你自己账号内的<b>中位数与分位数</b>出条件建议（例如开头高出中位数多少该怎么改）。</div>
+</section>
+
+<section class="card">
+  <h2>开始前准备什么</h2>
+  <div class="tbl-wrap">
+    <table class="prep-tbl">
+      <tr><th>需要什么</th><th>具体要求</th></tr>
+      <tr><td><b>抖音账号</b></td><td>一个能正常登录抖音创作者后台（<code>creator.douyin.com</code>）的账号</td></tr>
+      <tr><td><b>浏览器环境</b></td><td>电脑上有 Chrome 并登录过创作者后台（有 OpenCli 最好，AI 可帮你装；没有也能走手动导出表格路线）</td></tr>
+      <tr><td><b>你的 AI 助手</b></td><td>Claude Code、Pi、Kimi Code 等能读写文件、跑 Python 的 AI（环境只用 Python 3 标准库）</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="steps">
+  <article class="card step">
+    <h3><span class="num">1</span>把压缩包直接拖给你的 AI，发这一句话 <span class="who me">你做</span></h3>
+    <p>不用自己写代码、不用自己配脚本。把整个压缩包（或文件夹）拖进对话框，发送下面这句话：</p>
+    <div class="say-box">
+      <span class="say-text" id="say1">照着里面的 2-发给你的AI-让它照着做.md 帮我把抖音数据复盘流水线搭好。</span>
+      <button class="copy-btn" data-copy="say1">复制这句话</button>
+    </div>
+    <div class="stop">⏸ <b>AI 会在这些地方停下来问你</b>：① 你有没有装过 <code>OpenCli</code>（没有的话要不要它帮你顺手装上）；② 用 Mac 还是 Windows；③ 抖音创作者后台目前能不能正常登录。</div>
+  </article>
+
+  <article class="card step">
+    <h3><span class="num">2</span>AI 停下来确认登录时，在浏览器扫一次码 <span class="who me">你做</span></h3>
+    <p>抓取脚本是<b>完全只读</b>的（不改作品、不发文、不刷任何互动）。走自动抓取路线时，登录过期需要你本人出手；没装浏览器工具也能走「导出 Excel/CSV 拖入」路线：</p>
+    <figure class="diagram">
+      <span class="diagram-tag">示意图（两条取数路线对比）</span>
+      <svg viewBox="0 0 760 205" xmlns="http://www.w3.org/2000/svg" aria-label="抖音数据复盘两条取数路线示意图">
+        <rect x="6" y="10" width="356" height="86" rx="10" fill="#ffffff" stroke="#1f6feb" stroke-width="2"/>
+        <text x="20" y="34" font-size="13" font-weight="700" fill="#1f6feb">路线 A（推荐）：OpenCli 自动拉取</text>
+        <text x="20" y="57" font-size="12" fill="#5c6976">① 你在 Chrome 登录 creator.douyin.com</text>
+        <text x="20" y="78" font-size="12" fill="#18212b">② 对 AI 说「刷新数据」→ 一次拉 25 项后台指标</text>
+
+        <rect x="6" y="108" width="356" height="86" rx="10" fill="#ffffff" stroke="#e8700a" stroke-width="2"/>
+        <text x="20" y="132" font-size="13" font-weight="700" fill="#e8700a">路线 B（零工具备选）：手动导出拖进离线页</text>
+        <text x="20" y="155" font-size="12" fill="#5c6976">① 你在后台作品数据页点「导出 Excel / CSV」</text>
+        <text x="20" y="176" font-size="12" fill="#18212b">② 把导出的表拖进离线 HTML 导入页出报告</text>
+
+        <path d="M372 53 L432 95" stroke="#1f6feb" stroke-width="2.5"/>
+        <path d="M372 151 L432 109" stroke="#e8700a" stroke-width="2.5"/>
+        <polygon points="428,88 440,98 426,102" fill="#1f6feb"/>
+        <polygon points="426,102 440,106 428,116" fill="#e8700a"/>
+
+        <rect x="444" y="24" width="310" height="156" rx="12" fill="#e6f6ed" stroke="#1a7f4b" stroke-width="2"/>
+        <text x="599" y="54" text-anchor="middle" font-size="14" font-weight="700" fill="#1a7f4b">本地计算 & 生成单文件报告</text>
+        <text x="599" y="82" text-anchor="middle" font-size="12" fill="#18212b">• 算出互动率、收藏率、涨粉转化</text>
+        <text x="599" y="104" text-anchor="middle" font-size="12" fill="#18212b">• 按自己账号中位数划出绿/黄/红灯</text>
+        <text x="599" y="126" text-anchor="middle" font-size="12" fill="#18212b">• 输出单文件 HTML，双击就能看</text>
+        <text x="599" y="158" text-anchor="middle" font-size="12" font-weight="700" fill="#5c6976">数据只在本地，发微信也能直接打开</text>
+      </svg>
+      <figcaption>示意图：你只需要保证后台登录态或导出一次表格，计算、归因与报告渲染全由本地脚本搞定。</figcaption>
+    </figure>
+  </article>
+
+  <article class="card step">
+    <h3><span class="num">3</span>AI 跑通抓取与出报告，以后直接使唤它就行 <span class="who ai">AI 做，你看结果</span></h3>
+    <p>AI 会按 2 号文档写好拉数和出报告脚本，实际跑通一次最近作品的数据抓取并生成单文件报告给你打开看。</p>
+    <p class="okline">✅ 对了的样子：你能看到一份本地单文件 HTML 复盘报告，里面带每条视频的 2 秒跳出、5 秒完播、平均播放占比、收藏率与具体条件修改建议。</p>
+  </article>
+</section>
+
+<section class="card">
+  <h2>平时怎么用 & 边界说清楚</h2>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>你想做什么 / 遇到什么</th><th>怎么做</th></tr>
+      <tr><td>发完新片过两天想复盘</td><td>直接对 AI 说「拉一下最近抖音数据，出最新复盘报告」（或只拉最近 5 条）</td></tr>
+      <tr><td>提示登录态过期拉不动</td><td>自己打开 Chrome 扫一下码重登抖音创作者后台，再让 AI 重跑（工具不会保存账号密码）</td></tr>
+      <tr><td>想对比改脚本、不重新抓数据</td><td>对 AI 说「不用抓新数据，重新生成一遍报告」</td></tr>
+    </table>
+  </div>
+  <div class="notice">
+    <b>边界说清楚</b>：① 不预测爆款，只靠你历史数据给概率性条件建议；② 只拉自己后台，不抓竞品（抓别人爆款是另一套工具）；③ 不在一分钟内高频刷接口，自动任务至少间隔 6 小时防风控；④ 登录态会过期，过期时需要你重新扫码。
+  </div>
+</section>
+
+<p class="foot">本说明书为单文件零外网版，可保存本地随时查阅</p>
+</main>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const t=document.getElementById(btn.dataset.copy).innerText;
+    navigator.clipboard.writeText(t).then(()=>{
+      const old=btn.textContent;
+      btn.textContent='已复制';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied')},1500);
+    });
+  });
+});
+</script>
+</body>
+</html>
